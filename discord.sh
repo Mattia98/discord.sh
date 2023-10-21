@@ -53,6 +53,7 @@ function install_discord() {
 	# Update Discord to install it :/
 	update_discord;
 	# Create a desktop file for this
+	mkdir -p ~/.local/share/applications/
 	cat > ~/.local/share/applications/Discord.desktop <<\EOF
 [Desktop Entry]
 Name=Discord
