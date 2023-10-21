@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "discord.sh version 1.0"
+echo "discord.sh version 1.1"
 
 # Check dependencies
 if ! hash jq ; then
