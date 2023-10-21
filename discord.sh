@@ -25,12 +25,17 @@ function main() {
 		# Compare version
 		if [ $(version $CURR_VER) -lt $(version $LAST_VER) ]; then 
 			# We are outdated, need to update
+			msg "Updating Discord"
 			update_discord;
+		else
+			msg "No update necessary"
 		fi
 	else
+		msg "Installing Discord for the first time"
 		install_discord;
 	fi
 	# Ready to go, start Discord
+	msg "Starting Discord"
 	start_discord;
 }
 
@@ -69,5 +74,13 @@ function start_discord() {
 }
 
 function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
+
+function msg() {
+	if hash notify-send ; then
+		notify-send -i discord "discord.sh" "$1"
+	else
+		echo "$1"
+	fi
+}
 
 main;
