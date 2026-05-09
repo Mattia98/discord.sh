@@ -4,10 +4,6 @@ set -e
 echo "discord.sh version 1.2"
 
 # Check dependencies
-if ! hash jq ; then
-	echo "jq is missing. Please install jq bevore proceeding"
-	exit 10
-fi
 if ! hash curl ; then
 	echo "curl is missing. Please install curl bevore proceeding"
 	exit 11
@@ -24,27 +20,28 @@ if [ ! -r "$0" ] ; then
 fi
 
 function main() {
+	# Get latest version number
+	LAST_VER=$(curl 'https://discord.com/api/download?platform=linux' -si | grep -oP 'location: \K.*' | cut -d '/' -f 6)
+
 	# Check wether Discord is already installed
 	if [ -d ~/.local/opt/Discord/ ]; then
 		msg "Checking for updates"
-		# Get latest version number
-		LAST_VER=$(curl 'https://discord.com/api/download?platform=linux' -si | grep -oP 'location: \K.*' | cut -d '/' -f 6)
 		echo "Latest version is $LAST_VER"
 		# Get installed version number
-		CURR_VER=$(jq .version -r ~/.local/opt/Discord/resources/build_info.json)
+		CURR_VER=$(cat ~/.local/opt/Discord/DISCORD_SH_INSTALLED_VERSION || echo '0.0.0')
 		echo "Current version is $CURR_VER"
 		# Compare version
 		if [ $(version $CURR_VER) -lt $(version $LAST_VER) ]; then 
 			# We are outdated, need to update
 			msg "Updating Discord"
-			update_discord;
+			update_discord $CURR_VER;
 			cleanup_cache;
 		else
 			msg "No update necessary"
 		fi
 	else
 		msg "Installing Discord for the first time"
-		install_discord;
+		install_discord $LAST_VER;
 	fi
 	# Ready to go, start Discord
 	msg "Starting Discord"
@@ -60,13 +57,14 @@ function update_discord() {
 	# Extract Discord into its new home
 	msg "Extracting Discord"
 	tar --overwrite -xf "$TMP_DIR/discord.tgz" --directory ~/.local/opt/
+	echo $1 > ~/.local/opt/Discord/DISCORD_SH_INSTALLED_VERSION
 }
 
 function install_discord() {
 	# Make sure our directory exists
 	mkdir -p ~/.local/opt/Discord/
 	# Update Discord to install it :/
-	update_discord;
+	update_discord $1;
 	# Create a desktop file for this
 	mkdir -p ~/.local/share/applications/
 	cat > ~/.local/share/applications/Discord.desktop <<EOF
@@ -88,7 +86,7 @@ EOF
 }
 
 function start_discord() {
-	~/.local/opt/Discord/Discord
+	~/.local/opt/Discord/discord
 }
 
 function cleanup_cache() {
